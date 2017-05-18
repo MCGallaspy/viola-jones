@@ -9,4 +9,8 @@ set(SOURCE_FILES
         integral_image.cpp
         integral_image.h)
 
+include_directories(.)
+
 add_library(vj_mcg STATIC ${SOURCE_FILES})
+
+add_executable(test_vj_mcg ${SOURCE_FILES} test/test_vj_mcg.cpp)

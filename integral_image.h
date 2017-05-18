@@ -15,6 +15,8 @@ public:
     using sum_t = std::uint_fast32_t;
     using size_type = bitmap::size_type;
 
+    explicit integral_image(const bitmap& bm);
+
     const sum_t& at(size_type width, size_type height) const;
     sum_t& at(size_type width, size_type height);
 
