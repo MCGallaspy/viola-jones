@@ -15,9 +15,9 @@ using namespace mcg;
 template <typename func_t>
 void test_runner(std::string&& m_name, func_t&& m_func)
 {
-    std::cout << "Running " << m_name << "...\n";
+    std::cout << "Running " << m_name << "... ";
     m_func();
-    std::cout << "Finished " << m_name << ".\n";
+    std::cout << "finished " << m_name << ".\n";
 }
 
 #define MCG_RUN_TEST(test_name) \
