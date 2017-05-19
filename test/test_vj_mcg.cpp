@@ -3,6 +3,7 @@
 //
 #include "bitmap.h"
 #include "integral_image.h"
+#include "weak_classifier.h"
 
 #include <algorithm>
 #include <cassert>
@@ -36,8 +37,28 @@ void test_integral_image()
     assert(ii.at(10, 23)             == 128 * 11 * 24);
 }
 
+void test_weak_classifier_sanity()
+{
+    const int size = 100;
+    bitmap bm(size, size);
+    bm.m_data.resize(size*size);
+    std::fill(bm.m_data.begin(), bm.m_data.end(), 128);
+    integral_image ii(bm);
+    std::vector<rect> pos {
+            rect {0, 0, 2, 2}
+    };
+    std::vector<rect> neg {
+            rect {2, 2, 2, 2}
+    };
+    haar_feature feature(std::move(pos), std::move(neg));
+    weak_classifier w{true, 0.5, std::move(feature)};
+
+    w.predict(ii, rect {0, 0, 24, 24});
+}
+
 int main()
 {
     MCG_RUN_TEST(test_integral_image);
+    MCG_RUN_TEST(test_weak_classifier_sanity);
     return 0;
 }

@@ -7,7 +7,7 @@ set(SOURCE_FILES
         bitmap.cpp
         bitmap.h
         integral_image.cpp
-        integral_image.h)
+        integral_image.h haar_feature.cpp haar_feature.h weak_classifier.cpp weak_classifier.h)
 
 include_directories(.)
 
