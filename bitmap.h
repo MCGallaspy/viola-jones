@@ -3,13 +3,14 @@
 //
 #ifndef VIOLA_JONES_BITMAP_H
 #define VIOLA_JONES_BITMAP_H
-#include <vector>
 #include <cstdint>
+#include <iosfwd>
+#include <vector>
 
 namespace mcg
 {
 
-// A thin-wrapper around a row-major monochrom bitmap image
+// A thin-wrapper around a row-major monochrome bitmap image
 struct bitmap
 {
     using size_type = std::size_t;
@@ -24,6 +25,8 @@ struct bitmap
     const size_type m_height;
     std::vector<pixel_t> m_data;
 };
+
+bitmap from_file(std::istream& in);
 
 } // namespace mcg
 

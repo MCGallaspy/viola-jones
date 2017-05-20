@@ -11,6 +11,7 @@
 #include <limits>
 #include <string>
 #include <utility>
+#include <fstream>
 
 using namespace mcg;
 
@@ -85,10 +86,17 @@ void test_vectorize_subwindow()
     }
 }
 
+void test_read_bmp()
+{
+    std::ifstream in("../lena512.bmp");
+    auto bm = from_file(in);
+}
+
 int main()
 {
     MCG_RUN_TEST(test_integral_image);
     MCG_RUN_TEST(test_weak_classifier_sanity);
     MCG_RUN_TEST(test_vectorize_subwindow);
+    MCG_RUN_TEST(test_read_bmp);
     return 0;
 }
