@@ -12,11 +12,15 @@ namespace mcg {
 
 struct weak_classifier
 {
+    using sum_t = integral_image::sum_t;
     bool parity;
-    double threshold;
+    sum_t threshold;
     haar_feature feature;
 
     bool predict(const integral_image& ii, const rect& subwindow);
+
+    using data_t = std::vector<const integral_image&>;
+    void train(const data_t& data);
 };
 
 } // namespace mcg

@@ -8,7 +8,9 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <limits>
 #include <string>
+#include <utility>
 
 using namespace mcg;
 
@@ -51,14 +53,42 @@ void test_weak_classifier_sanity()
             rect {2, 2, 2, 2}
     };
     haar_feature feature(std::move(pos), std::move(neg));
-    weak_classifier w{true, 0.5, std::move(feature)};
+    using threshold_t = decltype(std::declval<weak_classifier>().threshold);
+    const auto threshold = std::numeric_limits<threshold_t>::max() / 2;
+    weak_classifier w{true, threshold, std::move(feature)};
 
     w.predict(ii, rect {0, 0, 24, 24});
+}
+
+void test_vectorize_subwindow()
+{
+    const int size = 100;
+    bitmap bm(size, size);
+    bm.m_data.resize(size * size);
+
+    for (auto i = 0; i < bm.m_data.size(); ++i)
+    {
+        bm.m_data[i] = i;
+    }
+
+    integral_image ii(bm);
+    rect window{10, 10, 10, 10};
+    auto vectorized_window = ii.vectorize_window(window);
+    auto it = vectorized_window.begin();
+    for (auto x = 10; x < 20; ++x)
+    {
+        for (auto y = 10; y < 20; ++y)
+        {
+            assert(*it = ii.at(x, y));
+            ++it;
+        }
+    }
 }
 
 int main()
 {
     MCG_RUN_TEST(test_integral_image);
     MCG_RUN_TEST(test_weak_classifier_sanity);
+    MCG_RUN_TEST(test_vectorize_subwindow);
     return 0;
 }

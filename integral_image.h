@@ -5,7 +5,9 @@
 #ifndef VIOLA_JONES_INTEGRAL_IMAGE_H
 #define VIOLA_JONES_INTEGRAL_IMAGE_H
 #include "bitmap.h"
+#include "rect.h"
 #include <vector>
+
 namespace mcg
 {
 
@@ -17,8 +19,10 @@ public:
 
     explicit integral_image(const bitmap& bm);
 
-    const sum_t& at(size_type width, size_type height) const;
-    sum_t& at(size_type width, size_type height);
+    const sum_t& at(size_type x, size_type y) const;
+    sum_t& at(size_type x, size_type y);
+
+    std::vector<sum_t> vectorize_window(const rect &subwindow);
 
 private:
     size_type m_width, m_height;
