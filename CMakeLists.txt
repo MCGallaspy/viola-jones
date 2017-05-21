@@ -4,8 +4,7 @@ project(viola_jones)
 set(CMAKE_CXX_STANDARD 11)
 
 set(SOURCE_FILES
-        bitmap.cpp
-        bitmap.h
+        basic_bitmap.h
         integral_image.cpp
         integral_image.h haar_feature.cpp haar_feature.h weak_classifier.cpp weak_classifier.h)
 

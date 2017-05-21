@@ -1,7 +1,7 @@
 //
 // Created by Mike on 5/17/2017.
 //
-#include "bitmap.h"
+#include "basic_bitmap.h"
 #include "integral_image.h"
 #include "weak_classifier.h"
 
@@ -29,7 +29,7 @@ void test_runner(std::string&& m_name, func_t&& m_func)
 void test_integral_image()
 {
     const int size = 100;
-    bitmap bm(size, size);
+    bitmap8 bm(size, size);
     bm.m_data.resize(size*size);
     std::fill(bm.m_data.begin(), bm.m_data.end(), 128);
     integral_image ii(bm);
@@ -43,7 +43,7 @@ void test_integral_image()
 void test_weak_classifier_sanity()
 {
     const int size = 100;
-    bitmap bm(size, size);
+    bitmap8 bm(size, size);
     bm.m_data.resize(size*size);
     std::fill(bm.m_data.begin(), bm.m_data.end(), 128);
     integral_image ii(bm);
@@ -64,7 +64,7 @@ void test_weak_classifier_sanity()
 void test_vectorize_subwindow()
 {
     const int size = 100;
-    bitmap bm(size, size);
+    bitmap8 bm(size, size);
     bm.m_data.resize(size * size);
 
     for (auto i = 0; i < bm.m_data.size(); ++i)
@@ -88,8 +88,16 @@ void test_vectorize_subwindow()
 
 void test_read_bmp()
 {
-    std::ifstream in("../lena512.bmp");
-    auto bm = from_file(in);
+    std::ifstream in("test.bmp");
+    bitmap8 bm = from_file<bitmap8>(in);
+    for (auto j = 0; j < bm.m_height; ++j)
+    {
+        for (auto i = 0; i < bm.m_width; ++i)
+        {
+            std::cout << static_cast<int32_t>(bm.at(i, j)) << " ";
+        }
+        std::cout << "\n";
+    }
 }
 
 int main()
