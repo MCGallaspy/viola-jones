@@ -76,11 +76,11 @@ void test_vectorize_subwindow()
     rect window{10, 10, 10, 10};
     auto vectorized_window = ii.vectorize_window(window);
     auto it = vectorized_window.begin();
-    for (auto x = 10; x < 20; ++x)
+    for (auto y = 10; y < 20; ++y)
     {
-        for (auto y = 10; y < 20; ++y)
+        for (auto x = 10; x < 20; ++x)
         {
-            assert(*it = ii.at(x, y));
+            assert(*it == ii.at(x, y));
             ++it;
         }
     }
@@ -89,15 +89,13 @@ void test_vectorize_subwindow()
 void test_read_bmp()
 {
     std::ifstream in("test.bmp");
-    bitmap8 bm = from_file<bitmap8>(in);
-    for (auto j = 0; j < bm.m_height; ++j)
-    {
-        for (auto i = 0; i < bm.m_width; ++i)
-        {
-            std::cout << static_cast<int32_t>(bm.at(i, j)) << " ";
-        }
-        std::cout << "\n";
-    }
+    bitmap24 bm = from_file<bitmap24>(in);
+    // This test assumes that 24-bit pixels are stored in BGR-order instead of RGB-order.
+    assert(bm.at(0, 0) == std::make_tuple(0, 0, 255));
+    assert(bm.at(1, 0) == std::make_tuple(0, 255, 0));
+    assert(bm.at(2, 0) == std::make_tuple(255, 0, 0));
+    assert(bm.at(3, 0) == std::make_tuple(255, 255, 255));
+    assert(bm.at(7, 7) == std::make_tuple(0, 0, 0));
 }
 
 int main()

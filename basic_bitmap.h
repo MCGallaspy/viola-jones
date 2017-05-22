@@ -32,6 +32,12 @@ struct basic_bitmap
 template <typename bitmap_t>
 bitmap_t from_file(std::istream& in);
 
+template <typename pixel_t>
+static std::istream& read(pixel_t& p, std::istream& in);
+
+using bitmap8 = basic_bitmap<uint8_t>;
+using bitmap24 = basic_bitmap<std::tuple<uint8_t, uint8_t, uint8_t>>;
+
 /**************
 * Definitions *
 **************/
@@ -101,38 +107,48 @@ bitmap_t from_file(std::istream& in)
     assert(file_header.bmp_header.bm[1] == 'M');
     assert(from_le_byte_array<uint32_t>(file_header.dib_header_size) - 4 == sizeof(dib_header));
 
-    const auto size = from_le_byte_array<uint32_t>(file_header.bmp_header.filesize);
-    std::cout << "Filesize " << size << ". ";
-    std::cout << "DIB header size " << from_le_byte_array<uint32_t>(file_header.dib_header_size) << ". ";
     in.read(reinterpret_cast<char*>(&dib_header), sizeof(dib_header));
 
-    std::cout << "Image size is "
-              << from_le_byte_array<int32_t>(dib_header.width) << "x"
-              << from_le_byte_array<int32_t>(dib_header.height) << ". ";
-    std::cout << "Color planes " << from_le_byte_array<uint16_t>(dib_header.color_planes) << ". ";
-    std::cout << "Bits per pixel " << from_le_byte_array<uint16_t>(dib_header.bits_per_pixel) << ". ";
+    auto bits_per_pixel = from_le_byte_array<uint16_t>(dib_header.bits_per_pixel);
+    assert(bits_per_pixel == sizeof(typename bitmap_t::pixel_t) * 8);
 
     // Skip reading the other info for now and go directly to the pixel array
     // Note in general that the info in the rest of the header must be considered in order to properly
     // interpret the data, e.g. the number of bits per pixel or the data in the color table.
     in.seekg(from_le_byte_array<uint32_t>(file_header.bmp_header.offset));
 
-    assert(from_le_byte_array<uint16_t>(dib_header.bits_per_pixel) == 24);
     const int32_t width = from_le_byte_array<int32_t>(dib_header.width);
     const int32_t height = from_le_byte_array<int32_t>(dib_header.height);
+    const uint32_t padding = bits_per_pixel / 8 * width % 32;
     bitmap_t bm(width, height);
-    for (auto i = 0; i < width * height; ++i)
+    for (auto j = 0; j < height; ++j)
     {
-        typename bitmap_t::pixel_t p;
-        in >> p;
-        bm.m_data.push_back(p);
+        for (auto i = 0; i < width; ++i)
+        {
+            typename bitmap_t::pixel_t p;
+            read(p, in);
+            bm.m_data.push_back(p);
+        }
+        in.seekg(in.tellg() + padding);
     }
     return bm;
 }
 
-using bitmap8 = basic_bitmap<uint8_t>;
-using bitmap24 = basic_bitmap<std::tuple<uint8_t>>;
+template <>
+std::istream& read(typename bitmap8::pixel_t& p, std::istream& in)
+{
+    in >> p;
+    return in;
+}
 
+template <>
+std::istream& read(typename bitmap24::pixel_t& p, std::istream& in)
+{
+    in >> std::get<0>(p)
+       >> std::get<1>(p)
+       >> std::get<2>(p);
+    return in;
+}
 } // namespace mcg
 
 #endif //VIOLA_JONES_BITMAP_H
