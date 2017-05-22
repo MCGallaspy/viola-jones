@@ -32,7 +32,7 @@ void test_integral_image()
     bitmap8 bm(size, size);
     bm.m_data.resize(size*size);
     std::fill(bm.m_data.begin(), bm.m_data.end(), 128);
-    integral_image ii(bm);
+    auto ii = integral_image<bitmap8>::create(bm);
     assert(ii.at(0, 0)               == 128 * 1);
     assert(ii.at(0, size - 1)        == 128 * size);
     assert(ii.at(size - 1, 0)        == 128 * size);
@@ -46,7 +46,7 @@ void test_weak_classifier_sanity()
     bitmap8 bm(size, size);
     bm.m_data.resize(size*size);
     std::fill(bm.m_data.begin(), bm.m_data.end(), 128);
-    integral_image ii(bm);
+    auto ii = integral_image<bitmap8>::create(bm);
     std::vector<rect> pos {
             rect {0, 0, 2, 2}
     };
@@ -54,9 +54,10 @@ void test_weak_classifier_sanity()
             rect {2, 2, 2, 2}
     };
     haar_feature feature(std::move(pos), std::move(neg));
-    using threshold_t = decltype(std::declval<weak_classifier>().threshold);
+    using ii_t = decltype(ii);
+    using threshold_t = typename ii_t::sum_t;
     const auto threshold = std::numeric_limits<threshold_t>::max() / 2;
-    weak_classifier w{true, threshold, std::move(feature)};
+    weak_classifier<ii_t> w{true, threshold, std::move(feature)};
 
     w.predict(ii, rect {0, 0, 24, 24});
 }
@@ -72,7 +73,7 @@ void test_vectorize_subwindow()
         bm.m_data[i] = i;
     }
 
-    integral_image ii(bm);
+    auto ii = integral_image<bitmap8>::create(bm);
     rect window{10, 10, 10, 10};
     auto vectorized_window = ii.vectorize_window(window);
     auto it = vectorized_window.begin();

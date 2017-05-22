@@ -35,6 +35,10 @@ bitmap_t from_file(std::istream& in);
 template <typename pixel_t>
 static std::istream& read(pixel_t& p, std::istream& in);
 
+// Used to define a sum_t that can hold sums of pixels
+template <typename>
+struct get_sum_t;
+
 using bitmap8 = basic_bitmap<uint8_t>;
 using bitmap24 = basic_bitmap<std::tuple<uint8_t, uint8_t, uint8_t>>;
 
@@ -149,6 +153,24 @@ std::istream& read(typename bitmap24::pixel_t& p, std::istream& in)
        >> std::get<2>(p);
     return in;
 }
-} // namespace mcg
 
+// Used to define a sum_t that can hold sums of pixels
+template <>
+struct get_sum_t<bitmap8>
+{
+    using sum_t = std::uint_fast32_t;
+};
+
+// Used to define a sum_t that can hold sums of pixels
+template <>
+struct get_sum_t<bitmap24>
+{
+    using sum_t = std::tuple<
+            std::uint_fast32_t,
+            std::uint_fast32_t,
+            std::uint_fast32_t
+            >;
+};
+
+} // namespace mcg
 #endif //VIOLA_JONES_BITMAP_H

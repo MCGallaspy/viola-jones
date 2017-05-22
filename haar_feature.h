@@ -18,9 +18,11 @@ namespace mcg
 class haar_feature
 {
 public:
-    using sum_t = integral_image::sum_t;
     haar_feature(std::vector<rect>&& pos, std::vector<rect>&& neg);
-    sum_t evaluate_at(const integral_image& ii, size_t x_offset, size_t y_offset);
+
+    template <typename integral_image_t>
+    typename integral_image_t::sum_t
+    evaluate_at(const integral_image_t& ii, size_t x_offset, size_t y_offset);
 
 private:
     std::vector<rect> m_pos, m_neg;
