@@ -63,26 +63,79 @@ integral_image<bitmap_t>::vectorize_window(const rect &subwindow) {
     return subw;
 }
 
+namespace detail
+{
+
+template <typename bitmap_t>
+static
+typename integral_image<bitmap_t>::sum_t
+add(const typename integral_image<bitmap_t>::sum_t& left, const typename bitmap_t::pixel_t& right);
+
+template <typename bitmap_t>
+static
+typename integral_image<bitmap_t>::sum_t
+add(const typename integral_image<bitmap_t>::sum_t& left, const typename integral_image<bitmap_t>::sum_t& right);
+
+template <>
+typename integral_image<bitmap8>::sum_t
+add<bitmap8>(const typename integral_image<bitmap8>::sum_t& left, const typename bitmap8::pixel_t& right)
+{
+    return left + right;
+}
+
+template <>
+typename integral_image<bitmap8>::sum_t
+add<bitmap8>(const typename integral_image<bitmap8>::sum_t& left, const typename integral_image<bitmap8>::sum_t& right)
+{
+    return left + right;
+}
+
+template <>
+typename integral_image<bitmap24>::sum_t
+add<bitmap24>(const typename integral_image<bitmap24>::sum_t& left, const typename bitmap24::pixel_t& right)
+{
+    using sum_t = typename integral_image<bitmap24>::sum_t;
+    return sum_t {
+        std::get<0>(left) + std::get<0>(right),
+        std::get<1>(left) + std::get<1>(right),
+        std::get<2>(left) + std::get<2>(right)
+    };
+}
+
+template <>
+typename integral_image<bitmap24>::sum_t
+add<bitmap24>(const typename integral_image<bitmap24>::sum_t& left, const typename integral_image<bitmap24>::sum_t& right)
+{
+    using sum_t = typename integral_image<bitmap24>::sum_t;
+    return sum_t {
+            std::get<0>(left) + std::get<0>(right),
+            std::get<1>(left) + std::get<1>(right),
+            std::get<2>(left) + std::get<2>(right)
+    };
+}
+
+} // namespace detail
+
 template<typename bitmap_t>
 integral_image<bitmap_t>
 integral_image<bitmap_t>::create(const bitmap_t &bm) {
-    using sum_t = integral_image<bitmap8>::sum_t;
-    using size_type = integral_image<bitmap8>::size_type;
-    using ii_t = integral_image<bitmap8>;
+    using sum_t = integral_image<bitmap_t>::sum_t;
+    using size_type = integral_image<bitmap_t>::size_type;
+    using ii_t = integral_image<bitmap_t>;
     ii_t ii;
     ii.m_width = bm.m_width;
     ii.m_height = bm.m_height;
     ii.m_data.resize(ii.m_width * ii.m_height);
-    std::vector<sum_t> row(ii.m_width, 0);
+    std::vector<sum_t> row(ii.m_width);
     for (size_type i = 0; i < ii.m_height; ++i) {
         for (size_type j = 0; j < ii.m_width; ++j) {
             if (j > 0) {
-                row[j] = row[j - 1] + bm.at(j, i);
+                row[j] = detail::add<bitmap_t>(row[j - 1], bm.at(j, i));
             } else {
                 row[j] = bm.at(j, i);
             }
             if (i > 0) {
-                ii.at(j, i) = ii.at(j, i - 1) + row[j];
+                ii.at(j, i) = detail::add<bitmap_t>(row[j], ii.at(j, i - 1));
             } else {
                 ii.at(j, i) = row[j];
             }

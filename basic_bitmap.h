@@ -36,7 +36,7 @@ template <typename pixel_t>
 static std::istream& read(pixel_t& p, std::istream& in);
 
 // Used to define a sum_t that can hold sums of pixels
-template <typename>
+template <typename bitmap_t>
 struct get_sum_t;
 
 using bitmap8 = basic_bitmap<uint8_t>;
@@ -143,6 +143,7 @@ std::istream& read(typename bitmap8::pixel_t& p, std::istream& in)
 {
     in >> p;
     return in;
+    return in;
 }
 
 template <>
@@ -154,14 +155,12 @@ std::istream& read(typename bitmap24::pixel_t& p, std::istream& in)
     return in;
 }
 
-// Used to define a sum_t that can hold sums of pixels
 template <>
 struct get_sum_t<bitmap8>
 {
     using sum_t = std::uint_fast32_t;
 };
 
-// Used to define a sum_t that can hold sums of pixels
 template <>
 struct get_sum_t<bitmap24>
 {
@@ -169,7 +168,7 @@ struct get_sum_t<bitmap24>
             std::uint_fast32_t,
             std::uint_fast32_t,
             std::uint_fast32_t
-            >;
+    >;
 };
 
 } // namespace mcg
