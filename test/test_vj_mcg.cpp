@@ -99,11 +99,22 @@ void test_read_bmp()
     assert(bm.at(7, 7) == std::make_tuple(0, 0, 0));
 }
 
+
+void test_create_bmp24()
+{
+    std::ifstream in("test.bmp");
+    bitmap24 bm = from_file<bitmap24>(in);
+    auto ii = integral_image<bitmap24>::create(bm);
+    assert(ii.at(0, 0) == bm.at(0, 0));
+}
+
+
 int main()
 {
     MCG_RUN_TEST(test_integral_image);
     MCG_RUN_TEST(test_weak_classifier_sanity);
     MCG_RUN_TEST(test_vectorize_subwindow);
     MCG_RUN_TEST(test_read_bmp);
+    MCG_RUN_TEST(test_create_bmp24);
     return 0;
 }
