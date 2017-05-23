@@ -158,16 +158,16 @@ std::istream& read(typename bitmap24::pixel_t& p, std::istream& in)
 template <>
 struct get_sum_t<bitmap8>
 {
-    using sum_t = std::uint_fast32_t;
+    using sum_t = std::int_fast32_t;
 };
 
 template <>
 struct get_sum_t<bitmap24>
 {
     using sum_t = std::tuple<
-            std::uint_fast32_t,
-            std::uint_fast32_t,
-            std::uint_fast32_t
+            std::int_fast32_t,
+            std::int_fast32_t,
+            std::int_fast32_t
     >;
 };
 

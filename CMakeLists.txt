@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 set(SOURCE_FILES
         basic_bitmap.h
-        integral_image.h haar_feature.cpp haar_feature.h weak_classifier.h)
+        integral_image.h haar_feature.h weak_classifier.h)
 
 include_directories(.)
 

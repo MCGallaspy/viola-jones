@@ -53,11 +53,10 @@ void test_weak_classifier_sanity()
     std::vector<rect> neg {
             rect {2, 2, 2, 2}
     };
-    haar_feature feature(std::move(pos), std::move(neg));
     using ii_t = decltype(ii);
-    using threshold_t = typename ii_t::sum_t;
-    const auto threshold = std::numeric_limits<threshold_t>::max() / 2;
-    weak_classifier<ii_t> w{true, threshold, std::move(feature)};
+    haar_feature<ii_t, 24, 24> feature(std::move(pos), std::move(neg));
+    using ii_t = decltype(ii);
+    weak_classifier<ii_t, 24, 24> w;
 
     w.predict(ii, rect {0, 0, 24, 24});
 }
