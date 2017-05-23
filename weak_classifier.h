@@ -19,13 +19,13 @@ struct weak_classifier
     using haar_feature_t = haar_feature<integral_image_t, _width, _height>;
 
     // data
+    haar_feature_t feature;
     bool parity;
     sum_t threshold;
-    haar_feature_t feature;
 
     bool predict(const integral_image_t& ii, const rect& subwindow);
 
-    using data_t = std::vector<const integral_image_t&>;
+    using data_t = std::vector<std::vector<sum_t>>;
     void train(const data_t& positive, const data_t& negative);
 };
 
@@ -33,7 +33,14 @@ template <typename ii_t, size_t width, size_t height>
 bool
 weak_classifier<ii_t, width, height>::predict(const ii_t &ii, const rect &subwindow)
 {
-    return false;
+    const auto window = ii.vectorize_window(subwindow);
+    const auto val = feature.evaluate(window);
+    if (parity)
+    {
+        return val < threshold;
+    } else {
+        return val > threshold;
+    }
 }
 
 template <typename ii_t, size_t width, size_t height>
@@ -65,11 +72,11 @@ weak_classifier<ii_t, width, height>::train(const weak_classifier::data_t &posit
         for (const auto& n : negative)
         {
             const auto val = feature.evaluate(n);
-            if (val < cur)
+            if (val > cur)
             {
                 ++negt;
             }
-            if (val > cur)
+            if (val < cur)
             {
                 ++negf;
             }

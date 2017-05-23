@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -19,12 +20,41 @@ template <typename func_t>
 void test_runner(std::string&& m_name, func_t&& m_func)
 {
     std::cout << "Running " << m_name << "... ";
+    auto start = std::chrono::system_clock::now();
     m_func();
-    std::cout << "finished " << m_name << ".\n";
+    using nanoseconds = std::chrono::nanoseconds;
+    nanoseconds end = std::chrono::system_clock::now() - start;
+    std::cout << "finished " << m_name << " in " << end.count() << "ns.\n";
 }
 
 #define MCG_RUN_TEST(test_name) \
     test_runner(#test_name, test_name);
+
+void test_weak_classifier_sanity_2()
+{
+    const int size = 100;
+    bitmap8 bm(size, size);
+    bm.m_data.resize(size*size);
+
+    const auto mid = bm.m_data.begin() + (bm.m_data.size() / 2);
+    std::fill(bm.m_data.begin(), mid, 0);
+    std::fill(mid, bm.m_data.end(), 255);
+    auto ii = integral_image<bitmap8>::create(bm);
+
+    using ii_t = decltype(ii);
+    haar_feature<ii_t, 24, 24> feature(std::vector<rect>{ rect{0, 0, 2, 2} },
+                                       std::vector<rect>{ rect{2, 0, 2, 2} });
+    weak_classifier<ii_t, 24, 24> w {std::move(feature)};
+
+    using data_t = typename weak_classifier<ii_t, 24, 24>::data_t;
+    const auto pos = ii.vectorize_window(rect {0, 0, 24, 24});
+    data_t posv(10, pos);
+    const auto neg = ii.vectorize_window(rect {76, 76, 24, 24});
+    data_t negv(10, pos);
+    w.train(posv, negv);
+    w.predict(ii, rect {0, 0, 24, 24});
+}
+
 
 void test_integral_image()
 {
@@ -115,5 +145,6 @@ int main()
     MCG_RUN_TEST(test_vectorize_subwindow);
     MCG_RUN_TEST(test_read_bmp);
     MCG_RUN_TEST(test_create_bmp24);
+    MCG_RUN_TEST(test_weak_classifier_sanity_2);
     return 0;
 }

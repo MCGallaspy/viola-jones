@@ -36,7 +36,7 @@ public:
     haar_feature& operator=(haar_feature&&) = default;
 
     // The integral image must have the same dimensions as the haar_feature.
-    sum_t evaluate(const integral_image_t& ii);
+    sum_t evaluate(const std::vector<sum_t>& data);
 
 private:
     static constexpr size_t length = width * height;
@@ -45,12 +45,12 @@ private:
 
 template <typename ii_t, size_t width, size_t height>
 typename haar_feature<ii_t, width, height>::sum_t
-haar_feature<ii_t, width, height>::evaluate(const integral_image_t &ii)
+haar_feature<ii_t, width, height>::evaluate(const std::vector<sum_t>& data)
 {
     sum_t sum = 0;
     for (auto i = 0; i < m_data.size(); ++i)
     {
-        sum += m_data[i] * ii[i];
+        sum += m_data[i] * data[i];
     }
     return sum;
 }

@@ -22,7 +22,7 @@ public:
     const sum_t& at(size_type x, size_type y) const;
     sum_t& at(size_type x, size_type y);
 
-    std::vector<sum_t> vectorize_window(const rect &subwindow);
+    std::vector<sum_t> vectorize_window(const rect &subwindow) const;
 
     static integral_image create(const bitmap_t& bm);
 
@@ -48,7 +48,8 @@ integral_image<bitmap_t>::at(size_type x, size_type y)
 // Copies the given subwindow into contiguous memory
 template <typename bitmap_t>
 std::vector<typename integral_image<bitmap_t>::sum_t>
-integral_image<bitmap_t>::vectorize_window(const rect &subwindow) {
+integral_image<bitmap_t>::vectorize_window(const rect &subwindow) const
+{
     auto subw = std::vector<sum_t>();
     subw.reserve(subwindow.dx * subwindow.dy);
     for (auto y = subwindow.y; y < subwindow.y + subwindow.dy; ++y)
