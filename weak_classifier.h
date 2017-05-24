@@ -26,7 +26,9 @@ struct weak_classifier
     bool predict(const integral_image_t& ii, const rect& subwindow);
 
     using data_t = std::vector<std::vector<sum_t>>;
-    void train(const data_t& positive, const data_t& negative);
+    void train(const weak_classifier::data_t &positive,
+                   const weak_classifier::data_t &negative,
+                   double max_false_positive_rate);
 };
 
 template <typename ii_t, size_t width, size_t height>
@@ -46,7 +48,8 @@ weak_classifier<ii_t, width, height>::predict(const ii_t &ii, const rect &subwin
 template <typename ii_t, size_t width, size_t height>
 void
 weak_classifier<ii_t, width, height>::train(const weak_classifier::data_t &positive,
-                                            const weak_classifier::data_t &negative)
+                                            const weak_classifier::data_t &negative,
+                                            double max_false_positive_rate)
 {
     static constexpr auto MIN = std::numeric_limits<sum_t>::min();
     static constexpr auto MAX = std::numeric_limits<sum_t>::max();
@@ -98,6 +101,10 @@ weak_classifier<ii_t, width, height>::train(const weak_classifier::data_t &posit
             threshold = cur;
             best_false_pos = false_posf;
             parity = false;
+        }
+        if (best_false_pos < max_false_positive_rate)
+        {
+            break;
         }
     }
 }

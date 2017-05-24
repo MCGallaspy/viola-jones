@@ -51,7 +51,7 @@ void test_weak_classifier_sanity_2()
     data_t posv(10, pos);
     const auto neg = ii.vectorize_window(rect {76, 76, 24, 24});
     data_t negv(10, pos);
-    w.train(posv, negv);
+    w.train(posv, negv, 0.67);
     w.predict(ii, rect {0, 0, 24, 24});
 }
 
