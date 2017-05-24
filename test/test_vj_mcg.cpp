@@ -13,8 +13,12 @@
 #include <string>
 #include <utility>
 #include <fstream>
+#include <sstream>
+#include <iomanip>
 
 using namespace mcg;
+
+std::pair<bitmap8, std::array<rect, 2>> from_bioid_files(std::istream& image_file, std::istream& eye_file);
 
 template <typename func_t>
 void test_runner(std::string&& m_name, func_t&& m_func)
@@ -29,6 +33,20 @@ void test_runner(std::string&& m_name, func_t&& m_func)
 
 #define MCG_RUN_TEST(test_name) \
     test_runner(#test_name, test_name);
+
+void test_weak_classifier_with_bioid_dataset()
+{
+    static constexpr auto FILE_MAX = 1520;
+    std::vector<std::pair<bitmap8, std::array<rect, 2>>> files ;
+    for (auto i = 0; i < FILE_MAX; ++i)
+    {
+        std::stringstream sstr;
+        sstr << "../bioid-faces/BioID_"
+             << std::setw(4) << std::setfill('0') << i << ".pgm";
+        std::cout << sstr.str();
+
+    }
+}
 
 void test_weak_classifier_sanity_2()
 {
@@ -146,5 +164,6 @@ int main()
     MCG_RUN_TEST(test_read_bmp);
     MCG_RUN_TEST(test_create_bmp24);
     MCG_RUN_TEST(test_weak_classifier_sanity_2);
+    MCG_RUN_TEST(test_weak_classifier_with_bioid_dataset);
     return 0;
 }
