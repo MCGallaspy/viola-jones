@@ -91,11 +91,13 @@ weak_classifier<ii_t, width, height>::train(const weak_classifier::data_t &posit
         {
             threshold = cur;
             best_false_pos = false_post;
+            parity = true;
         }
         if (successful_posf >= MIN_TRUE_POS_RATE && false_posf < best_false_pos)
         {
             threshold = cur;
             best_false_pos = false_posf;
+            parity = false;
         }
     }
 }
