@@ -37,15 +37,74 @@ void test_runner(std::string&& m_name, func_t&& m_func)
 void test_weak_classifier_with_bioid_dataset()
 {
     static constexpr auto FILE_MAX = 1520;
-    std::vector<std::pair<bitmap8, std::array<rect, 2>>> files ;
+    using ii_t = integral_image<bitmap8>;
+    std::vector<std::pair<ii_t, std::array<rect, 2>>> files ;
+    std::cout << "Reading files...\n";
     for (auto i = 0; i < FILE_MAX; ++i)
     {
         std::stringstream sstr;
         sstr << "../bioid-faces/BioID_"
              << std::setw(4) << std::setfill('0') << i << ".pgm";
-        std::cout << sstr.str();
-
+        std::ifstream in(sstr.str());
+        assert(in);
+        std::string tmp;
+        int width, height, max_pixel_val;
+        in >> tmp >> width >> height >> max_pixel_val;
+        bitmap8 bm(width, height);
+        bm.m_data.resize(width * height);
+        for (auto y = 0; y < height; ++y)
+        {
+            for (auto x = 0; x < width; ++x)
+            {
+                const auto c = in.get();
+                bm.at(x, y) = c;
+            }
+        }
+        in.close();
+        sstr.str("");
+        sstr << "../bioid-faces/BioID_"
+             << std::setw(4) << std::setfill('0') << i << ".eye";
+        in.open(sstr.str());
+        assert(in);
+        std::string comment;
+        std::getline(in, comment, '\n');
+        int lx, ly, rx, ry;
+        in >> lx >> ly >> rx >> ry;
+        static constexpr std::size_t w = 12;
+        if (lx >= w && ly >= w && rx >= w && ry >= w) {
+            rect left_eye{lx - w, ly - w, lx + w, ly + w},
+                    right_eye{rx - w, ry - w, ry + w, ly + w};
+            std::array<rect, 2> eyes{
+                    std::move(left_eye),
+                    std::move(right_eye)
+            };
+            files.push_back(std::make_pair(ii_t::create(bm), std::move(eyes)));
+        } else {
+            std::cerr << "Bad file " << i << "\n";
+        }
     }
+    haar_feature<ii_t, 24, 24> feature(
+            std::vector<rect>{ rect{0, 0, 6, 12} },
+            //std::vector<rect>{ },
+            std::vector<rect>{ rect{6, 0, 6, 12} }
+    );
+    weak_classifier<ii_t, 24, 24> w {std::move(feature)};
+    using data_t = typename weak_classifier<ii_t, 24, 24>::data_t;
+    data_t pos, neg;
+    std::cout << "Preparing data...\n";
+    for (const auto& pair : files)
+    {
+        for (const auto& eye : pair.second)
+        {
+            pos.push_back(pair.first.vectorize_window(eye));
+        }
+        neg.push_back(pair.first.vectorize_window(rect {0, 0, 24, 24}));
+    }
+    std::cout << "Using " << pos.size() << " pos. samples\n"
+              << "\tand " << neg.size() << " neg. samples\n";
+    std::cout << "Training...\n";
+    w.train(pos, neg, 0.67);
+    std::cout << w.threshold << ", " << w.parity << "\n";
 }
 
 void test_weak_classifier_sanity_2()
@@ -69,7 +128,8 @@ void test_weak_classifier_sanity_2()
     data_t posv(10, pos);
     const auto neg = ii.vectorize_window(rect {76, 76, 24, 24});
     data_t negv(10, pos);
-    w.train(posv, negv, 0.67);
+    w.train(posv, negv, 1.1);
+    std::cout << w.threshold << ", " << w.parity << "\n";
     w.predict(ii, rect {0, 0, 24, 24});
 }
 

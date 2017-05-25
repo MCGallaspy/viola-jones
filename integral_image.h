@@ -60,6 +60,11 @@ integral_image<bitmap_t>::vectorize_window(const rect &subwindow) const
         );
     }
     const bool precisely_filled = subw.size() == subw.capacity();
+    if (!precisely_filled)
+    {
+        std::cerr << subw.size() << "\n"
+            << subw.capacity() << "\n";
+    }
     assert(precisely_filled);
     return subw;
 }

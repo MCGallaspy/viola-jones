@@ -53,16 +53,22 @@ weak_classifier<ii_t, width, height>::train(const weak_classifier::data_t &posit
 {
     static constexpr auto MIN = std::numeric_limits<sum_t>::min();
     static constexpr auto MAX = std::numeric_limits<sum_t>::max();
-    threshold = MIN;
+    threshold = 0;
     parity = true;
     double best_false_pos = 1.;
-    for (sum_t cur = MIN; cur <= MAX; ++cur)
+    std::vector<sum_t> ps, ns;
+    std::transform(positive.begin(), positive.end(), std::back_inserter(ps), [this](const typename data_t::value_type& p){
+        return this->feature.evaluate(p);
+    });
+    std::transform(negative.begin(), negative.end(), std::back_inserter(ns), [this](const typename data_t::value_type& p){
+        return this->feature.evaluate(p);
+    });
+    for (sum_t cur = 0; cur <= MAX; ++cur)
     {
         uint32_t post{0}, negt{0},
                  posf{0}, negf{0};
-        for (const auto& p : positive)
+        for (const auto& val : ps)
         {
-            const auto val = feature.evaluate(p);
             if (val < cur)
             {
                 ++post;
@@ -72,14 +78,13 @@ weak_classifier<ii_t, width, height>::train(const weak_classifier::data_t &posit
                 ++posf;
             }
         }
-        for (const auto& n : negative)
+        for (const auto& val : ns)
         {
-            const auto val = feature.evaluate(n);
-            if (val > cur)
+            if (val < cur)
             {
                 ++negt;
             }
-            if (val < cur)
+            if (val > cur)
             {
                 ++negf;
             }
@@ -90,6 +95,13 @@ weak_classifier<ii_t, width, height>::train(const weak_classifier::data_t &posit
         const double successful_posf = static_cast<double>(posf) / pos_size;
         const double false_post = static_cast<double>(negt) / neg_size;
         const double false_posf = static_cast<double>(negf) / neg_size;
+        if ( cur % 10000000 == 0) {
+            std::fprintf(stderr, "%d:\n\tSuccesses: %.3f, %.3f\n\tFailures: %.3f, %.3f\n",
+                         cur,
+                         successful_posf, successful_post,
+                         false_posf, false_post
+            );
+        }
         if (successful_post >= MIN_TRUE_POS_RATE && false_post < best_false_pos)
         {
             threshold = cur;
