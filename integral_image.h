@@ -26,6 +26,9 @@ public:
 
     static integral_image create(const bitmap_t& bm);
 
+    size_type width() const;
+    size_type height() const;
+
 private:
     size_type m_width, m_height;
     std::vector<sum_t> m_data;
@@ -60,6 +63,11 @@ integral_image<bitmap_t>::vectorize_window(const rect &subwindow) const
         );
     }
     const bool precisely_filled = subw.size() == subw.capacity();
+    if (!precisely_filled)
+    {
+        std::cerr << subw.size() << "\n"
+            << subw.capacity() << "\n";
+    }
     assert(precisely_filled);
     return subw;
 }
@@ -143,6 +151,18 @@ integral_image<bitmap_t>::create(const bitmap_t &bm) {
         }
     }
     return ii;
+}
+
+template<typename bitmap_t>
+typename integral_image<bitmap_t>::size_type
+integral_image<bitmap_t>::width() const {
+    return m_width;
+}
+
+template<typename bitmap_t>
+typename integral_image<bitmap_t>::size_type
+integral_image<bitmap_t>::height() const {
+    return m_height;
 }
 
 } // namespace mcg

@@ -14,7 +14,7 @@ namespace mcg {
 template <typename integral_image_t, size_t _width, size_t _height>
 struct weak_classifier
 {
-    static constexpr double MIN_TRUE_POS_RATE = 0.99999;
+    static constexpr double MIN_TRUE_POS_RATE = 0.5;
     using sum_t = typename integral_image_t::sum_t;
     using haar_feature_t = haar_feature<integral_image_t, _width, _height>;
 
@@ -27,8 +27,7 @@ struct weak_classifier
 
     using data_t = std::vector<std::vector<sum_t>>;
     void train(const weak_classifier::data_t &positive,
-                   const weak_classifier::data_t &negative,
-                   double max_false_positive_rate);
+                   const weak_classifier::data_t &negative);
 };
 
 template <typename ii_t, size_t width, size_t height>
@@ -48,64 +47,39 @@ weak_classifier<ii_t, width, height>::predict(const ii_t &ii, const rect &subwin
 template <typename ii_t, size_t width, size_t height>
 void
 weak_classifier<ii_t, width, height>::train(const weak_classifier::data_t &positive,
-                                            const weak_classifier::data_t &negative,
-                                            double max_false_positive_rate)
+                                            const weak_classifier::data_t &negative)
 {
-    static constexpr auto MIN = std::numeric_limits<sum_t>::min();
-    static constexpr auto MAX = std::numeric_limits<sum_t>::max();
-    threshold = MIN;
+    threshold = 0;
     parity = true;
-    double best_false_pos = 1.;
-    for (sum_t cur = MIN; cur <= MAX; ++cur)
+    std::vector<sum_t> ps, ns;
+    std::transform(positive.begin(), positive.end(), std::back_inserter(ps), [this](const typename data_t::value_type& p){
+        return this->feature.evaluate(p);
+    });
+    std::transform(negative.begin(), negative.end(), std::back_inserter(ns), [this](const typename data_t::value_type& p){
+        return this->feature.evaluate(p);
+    });
+    std::sort(ps.begin(), ps.end());
+    std::sort(ns.begin(), ns.end());
+    auto minmax_res = std::minmax_element(ps.begin(), ps.end());
+    const auto min = minmax_res.first;
+    const auto max = minmax_res.second;
+    auto min_false_pos_count = std::count_if(ns.begin(), ns.end(), [min](sum_t e) {
+        return e < *min;
+    });
+    auto max_false_pos_count = std::count_if(ns.begin(), ns.end(), [max](sum_t e) {
+        return e > *max;
+    });
+    double false_pos_rate;
+    parity = min_false_pos_count < max_false_pos_count;
+    if (parity)
     {
-        uint32_t post{0}, negt{0},
-                 posf{0}, negf{0};
-        for (const auto& p : positive)
-        {
-            const auto val = feature.evaluate(p);
-            if (val < cur)
-            {
-                ++post;
-            }
-            if (val > cur)
-            {
-                ++posf;
-            }
-        }
-        for (const auto& n : negative)
-        {
-            const auto val = feature.evaluate(n);
-            if (val > cur)
-            {
-                ++negt;
-            }
-            if (val < cur)
-            {
-                ++negf;
-            }
-        }
-        const auto pos_size = positive.size();
-        const auto neg_size = negative.size();
-        const double successful_post = static_cast<double>(post) / pos_size;
-        const double successful_posf = static_cast<double>(posf) / pos_size;
-        const double false_post = static_cast<double>(negt) / neg_size;
-        const double false_posf = static_cast<double>(negf) / neg_size;
-        if (successful_post >= MIN_TRUE_POS_RATE && false_post < best_false_pos)
-        {
-            threshold = cur;
-            best_false_pos = false_post;
-            parity = true;
-        }
-        if (successful_posf >= MIN_TRUE_POS_RATE && false_posf < best_false_pos)
-        {
-            threshold = cur;
-            best_false_pos = false_posf;
-            parity = false;
-        }
-        if (best_false_pos < max_false_positive_rate)
-        {
-            break;
-        }
+        false_pos_rate = static_cast<double>(max_false_pos_count) / ns.size();
+        threshold = *max;
+    }
+    else
+    {
+        false_pos_rate = static_cast<double>(min_false_pos_count) / ns.size();
+        threshold = *min;
     }
 }
 
