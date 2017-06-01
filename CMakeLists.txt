@@ -9,6 +9,12 @@ set(SOURCE_FILES
 
 include_directories(.)
 
-add_library(vj_mcg STATIC ${SOURCE_FILES})
+#add_library(vj_mcg STATIC ${SOURCE_FILES})
 
 add_executable(test_vj_mcg ${SOURCE_FILES} test/test_vj_mcg.cpp)
+
+include_directories(D:\\benchmark\\include\\benchmark)
+link_directories(D:\\benchmark\\cmake-build-release\\src)
+add_executable(benchmarks ${SOURCE_FILES} test/benchmarks.cpp)
+target_link_libraries(benchmarks benchmark)
+target_link_libraries(benchmarks shlwapi)
