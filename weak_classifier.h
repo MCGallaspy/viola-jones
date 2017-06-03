@@ -14,7 +14,6 @@ namespace mcg {
 template <typename integral_image_t, size_t _width, size_t _height>
 struct weak_classifier
 {
-    static constexpr double MIN_TRUE_POS_RATE = 0.5;
     using sum_t = typename integral_image_t::sum_t;
     using haar_feature_t = haar_feature<integral_image_t, _width, _height>;
 
@@ -58,6 +57,8 @@ weak_classifier<ii_t, width, height>::train(const weak_classifier::data_t &posit
     std::transform(negative.begin(), negative.end(), std::back_inserter(ns), [this](const typename data_t::value_type& p){
         return this->feature.evaluate(p);
     });
+    // If the processor uses branch prediction, this might make it faster.
+    // So far my benchmarking has been inconclusive
     std::sort(ps.begin(), ps.end());
     std::sort(ns.begin(), ns.end());
     auto minmax_res = std::minmax_element(ps.begin(), ps.end());
@@ -69,16 +70,13 @@ weak_classifier<ii_t, width, height>::train(const weak_classifier::data_t &posit
     auto max_false_pos_count = std::count_if(ns.begin(), ns.end(), [max](sum_t e) {
         return e > *max;
     });
-    double false_pos_rate;
     parity = min_false_pos_count < max_false_pos_count;
     if (parity)
     {
-        false_pos_rate = static_cast<double>(max_false_pos_count) / ns.size();
         threshold = *max;
     }
     else
     {
-        false_pos_rate = static_cast<double>(min_false_pos_count) / ns.size();
         threshold = *min;
     }
 }
