@@ -74,6 +74,10 @@ void detail_gwc::next_limits(std::array<size_t, n> &arr, size_t max)
     }
 }
 
+// This generates strictly more haar-like features than described in Viola-Jones, as here
+// we consider subrectangles that are not symmetric.
+// If it turns out that considering too many features is computationally prohibitive,
+// this should be modified to create fewer
 template <typename feature_kind, typename output_iterator_t, typename integral_image_t, size_t width, size_t height>
 struct generate_features<
         weak_classifier<integral_image_t, width, height>,
@@ -82,8 +86,6 @@ struct generate_features<
 {
     static void run(output_iterator_t out)
     {
-        static constexpr size_t min_width = feature_kind::horizontal_divisions + 1;
-        static constexpr size_t min_height = feature_kind::vertical_divisions + 1;
         // The "limits" are an ordered tuple, where the first element is where the large rectangle starts,
         // the following elements indicate where the subdivisions start,
         // and the final element is one past where the last subdivision ends.
@@ -95,33 +97,48 @@ struct generate_features<
         std::array<size_t, feature_kind::vertical_divisions + 2> v_limits;
         for (auto i = 0; i < v_limits.size(); ++i)
         {
-        v_limits[i] = i;
+            v_limits[i] = i;
         }
         const auto h_begin = h_limits;
         const auto v_begin = v_limits;
         do {
-            haar_feature<integral_image_t, width, height> feature;
             std::vector<rect> pos, neg;
+            bool parity = true;
+            for (auto j = 0; j < v_limits.size() - 1; ++j)
+            {
+                for (auto i = 0; i < h_limits.size() - 1; ++i)
+                {
+                    const auto x = h_limits[i];
+                    const auto y = v_limits[j];
+                    const auto dx = h_limits[i + 1] - x;
+                    const auto dy = v_limits[j + 1] - y;
+                    rect r{x, y, dx, dy};
+                    if (parity)
+                    {
+                        pos.push_back(std::move(r));
+                    }
+                    else
+                    {
+                        neg.push_back(std::move(r));
+                    }
+                    parity = !parity;
+                }
+            }
+            haar_feature<integral_image_t, width, height> feature(std::move(pos), std::move(neg));
+            *out = weak_classifier<integral_image_t, width, height>{std::move(feature)};
             detail_gwc::next_limits(h_limits, width);
-            detail_gwc::next_limits(v_limits, height);
+            const bool step_vertical =
+                    !std::lexicographical_compare(h_begin.begin(), h_begin.end(), h_limits.begin(), h_limits.end());
+            if (step_vertical)
+            {
+                detail_gwc::next_limits(v_limits, height);
+            }
         } while (
                 std::lexicographical_compare(h_begin.begin(), h_begin.end(), h_limits.begin(), h_limits.end())
                 || std::lexicographical_compare(v_begin.begin(), v_begin.end(), v_limits.begin(), v_limits.end())
                 );
     }
 };
-
-
-using wc_t = weak_classifier<integral_image<bitmap8>, 24, 24>;
-using myvec = std::vector<wc_t>;
-template <typename iterator_t>
-using test = generate_features<wc_t, haar_feature_kinds::kind_1, iterator_t>;
-
-static void testfoo()
-{
-    myvec foo;
-    test<decltype(std::back_inserter(foo))>::run(std::back_inserter(foo));
-}
 
 } // namespace mcg
 

@@ -36,6 +36,17 @@ void test_runner(std::string&& m_name, func_t&& m_func)
 #define MCG_RUN_TEST(test_name) \
     test_runner(#test_name, test_name);
 
+void test_generate_weak_classifiers()
+{
+    using wc_t = weak_classifier<integral_image<bitmap8>, 24, 24>;
+    using vec_t = std::vector<wc_t>;
+    vec_t vec;
+    using iterator_t = decltype(std::back_inserter(vec));
+    generate_features<wc_t, haar_feature_kinds::kind_1, iterator_t>::run(std::back_inserter(vec));
+    const auto num_classifiers = 690000;
+    assert(vec.size() == num_classifiers);
+}
+
 void test_next_offsets()
 {
     std::array<size_t, 3> arr {1, 2, 3};
@@ -251,5 +262,6 @@ int main()
     MCG_RUN_TEST(test_weak_classifier_sanity_2);
     MCG_RUN_TEST(test_weak_classifier_with_bioid_dataset);
     MCG_RUN_TEST(test_next_offsets);
+    MCG_RUN_TEST(test_generate_weak_classifiers);
     return 0;
 }
