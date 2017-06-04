@@ -4,6 +4,7 @@
 #include "basic_bitmap.h"
 #include "integral_image.h"
 #include "weak_classifier.h"
+#include "util/generate_weak_classifiers.h"
 
 #include <algorithm>
 #include <cassert>
@@ -15,6 +16,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <set>
 
 using namespace mcg;
 
@@ -33,6 +35,28 @@ void test_runner(std::string&& m_name, func_t&& m_func)
 
 #define MCG_RUN_TEST(test_name) \
     test_runner(#test_name, test_name);
+
+void test_next_offsets()
+{
+    std::array<size_t, 3> arr {1, 2, 3};
+    std::set<std::tuple<size_t, size_t, size_t>> counter;
+    for (auto i = 0; i < 40; ++i)
+    {
+        counter.insert(std::make_tuple(
+                arr[0],
+                arr[1],
+                arr[2]));
+        detail_gwc::next_limits(arr, 5);
+    }
+    assert(counter.size() == 20);
+
+    std::array<size_t, 1> trivial {0};
+    for (auto i = 0; i < 1000; ++i)
+    {
+        assert(trivial[0] == (i % 101));
+        detail_gwc::next_limits(trivial, 100);
+    }
+}
 
 void test_weak_classifier_with_bioid_dataset()
 {
@@ -83,10 +107,6 @@ void test_weak_classifier_with_bioid_dataset()
             std::cerr << "Bad file " << i << "\n";
         }
     }
-/*    haar_feature<ii_t, 24, 24> feature(
-            std::vector<rect>{ rect{0, 0, w/3, w}, rect{2*w/3, 0, w/3, w} },
-            std::vector<rect>{ rect{w/3, 0, w/3, w} }
-    );*/
     haar_feature<ii_t, 24, 24> feature(
             std::vector<rect>{ rect{0, 0, w/2, w} },
             std::vector<rect>{ rect{w/2, 0, w/2, w} }
@@ -230,5 +250,6 @@ int main()
     MCG_RUN_TEST(test_create_bmp24);
     MCG_RUN_TEST(test_weak_classifier_sanity_2);
     MCG_RUN_TEST(test_weak_classifier_with_bioid_dataset);
+    MCG_RUN_TEST(test_next_offsets);
     return 0;
 }
