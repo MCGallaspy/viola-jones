@@ -10,9 +10,22 @@
 #include <array>
 #include <cstdint>
 #include <vector>
+#include <ostream>
 
 namespace mcg
 {
+/*
+ * Declarations
+ */
+template <typename _integral_image_t, size_t _width, size_t _height>
+class haar_feature;
+
+template <typename _integral_image_t, size_t _width, size_t _height>
+std::ostream& operator<<(std::ostream& out, const haar_feature<_integral_image_t, _width, _height>& feature);
+
+/*
+ * Definitions
+ */
 
 /*
  * A Haar-like feature is defined by two sequences of rectangles that
@@ -38,10 +51,32 @@ public:
     // The integral image must have the same dimensions as the haar_feature.
     sum_t evaluate(const std::vector<sum_t>& data);
 
+    template <typename _integral_image_t_, size_t _width_, size_t _height_>
+    friend std::ostream& operator<<(std::ostream& out, const haar_feature<_integral_image_t_, _width_, _height_>& feature);
+
 private:
     static constexpr size_t length = width * height;
     std::array<sum_t, length> m_data;
 };
+
+template <typename _integral_image_t, size_t _width, size_t _height>
+std::ostream& operator<<(std::ostream& out, const haar_feature<_integral_image_t, _width, _height>& feature)
+{
+    using feature_t = haar_feature<_integral_image_t, _width, _height>;
+    for (auto j = 0; j < feature_t::height; ++j)
+    {
+        for (auto i = 0; i < feature_t::width; ++i)
+        {
+            char c = '.';
+            const auto n = j * feature_t::width + i;
+            if (feature.m_data[n] == 1) c = 'P';
+            if (feature.m_data[n] == -1) c = 'N';
+            out << c;
+        }
+        out << "\n";
+    }
+    return out;
+}
 
 template <typename ii_t, size_t width, size_t height>
 typename haar_feature<ii_t, width, height>::sum_t
