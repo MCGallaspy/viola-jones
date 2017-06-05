@@ -30,7 +30,7 @@ void test_runner(std::string&& m_name, func_t&& m_func)
     m_func();
     using nanoseconds = std::chrono::nanoseconds;
     nanoseconds end = std::chrono::system_clock::now() - start;
-    std::cout << "finished " << m_name << " in " << end.count() << "ns.\n";
+    std::cout << "finished " << m_name << " in " << std::chrono::duration_cast<std::chrono::seconds>(end).count() << "s.\n";
 }
 
 #define MCG_RUN_TEST(test_name) \
