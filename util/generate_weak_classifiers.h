@@ -26,6 +26,32 @@ struct kind_1
     static constexpr int vertical_divisions = 0;
 };
 
+struct kind_2
+{
+    static constexpr int horizontal_divisions = 0;
+    static constexpr int vertical_divisions = 1;
+};
+
+struct kind_3
+{
+    static constexpr int horizontal_divisions = 2;
+    static constexpr int vertical_divisions = 0;
+};
+
+struct kind_4
+{
+    static constexpr int horizontal_divisions = 0;
+    static constexpr int vertical_divisions = 2;
+};
+
+struct kind_5
+{
+    static constexpr int horizontal_divisions = 1;
+    static constexpr int vertical_divisions = 1;
+};
+
+using all_kinds = std::tuple<kind_1, kind_2, kind_3, kind_4, kind_5>;
+
 } // namespace mcg::haar_feature_kinds
 
 /*
@@ -33,7 +59,7 @@ struct kind_1
  */
 
 template <typename weak_classifier_t, typename feature_t, typename output_iterator_t>
-struct generate_features
+struct generate_features_
 {
     static void run(output_iterator_t out);
 };
@@ -79,7 +105,7 @@ void detail_gwc::next_limits(std::array<size_t, n> &arr, size_t max)
 // If it turns out that considering too many features is computationally prohibitive,
 // this should be modified to create fewer
 template <typename feature_kind, typename output_iterator_t, typename integral_image_t, size_t width, size_t height>
-struct generate_features<
+struct generate_features_<
         weak_classifier<integral_image_t, width, height>,
         feature_kind,
         output_iterator_t>
@@ -99,6 +125,12 @@ struct generate_features<
         {
             v_limits[i] = i;
         }
+        // If switch_row_parities is true, then the next row will have the swapped parity as the previous one.
+        // E.g. P - N on the first row (one horizontal division) means the next row should have N - P parity,
+        // so that flattened the parities look like P - N - N - P.
+        // whereas P - N - P (two horizontal divisions) should continue the switching and get N - P - N, which
+        // when flattened looks like P - N - P - N - P - N.
+        const bool switch_row_parities = feature_kind::horizontal_divisions % 2 == 1;
         const auto h_begin = h_limits;
         const auto v_begin = v_limits;
         do {
@@ -123,6 +155,7 @@ struct generate_features<
                     }
                     parity = !parity;
                 }
+                parity = switch_row_parities ? !parity : parity;
             }
             haar_feature<integral_image_t, width, height> feature(std::move(pos), std::move(neg));
             *out = weak_classifier<integral_image_t, width, height>{std::move(feature)};

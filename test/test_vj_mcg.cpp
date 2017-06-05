@@ -20,8 +20,6 @@
 
 using namespace mcg;
 
-std::pair<bitmap8, std::array<rect, 2>> from_bioid_files(std::istream& image_file, std::istream& eye_file);
-
 template <typename func_t>
 void test_runner(std::string&& m_name, func_t&& m_func)
 {
@@ -36,13 +34,47 @@ void test_runner(std::string&& m_name, func_t&& m_func)
 #define MCG_RUN_TEST(test_name) \
     test_runner(#test_name, test_name);
 
+void test_generate_weak_classifiers_kind_5()
+{
+    using wc_t = weak_classifier<integral_image<bitmap8>, 3, 3>;
+    using vec_t = std::vector<wc_t>;
+    vec_t vec;
+    using iterator_t = decltype(std::back_inserter(vec));
+    generate_features_<wc_t, haar_feature_kinds::kind_5, iterator_t>::run(std::back_inserter(vec));
+    assert(vec.size() == 16); // Obtained from exhaustive counting.
+}
+
+void test_generate_symmetric_weak_classifiers_2()
+{
+    // Since the feature types are symmetric, the count should be the same;
+    using wc_t = weak_classifier<integral_image<bitmap8>, 4, 4>;
+    using vec_t = std::vector<wc_t>;
+    vec_t vec1, vec2;
+    using iterator_t = decltype(std::back_inserter(vec1));
+    generate_features_<wc_t, haar_feature_kinds::kind_3, iterator_t>::run(std::back_inserter(vec1));
+    generate_features_<wc_t, haar_feature_kinds::kind_4, iterator_t>::run(std::back_inserter(vec2));
+    assert(vec1.size() == vec2.size());
+}
+
+void test_generate_symmetric_weak_classifiers_1()
+{
+    // Since the feature types are symmetric, the count should be the same;
+    using wc_t = weak_classifier<integral_image<bitmap8>, 4, 4>;
+    using vec_t = std::vector<wc_t>;
+    vec_t vec1, vec2;
+    using iterator_t = decltype(std::back_inserter(vec1));
+    generate_features_<wc_t, haar_feature_kinds::kind_1, iterator_t>::run(std::back_inserter(vec1));
+    generate_features_<wc_t, haar_feature_kinds::kind_2, iterator_t>::run(std::back_inserter(vec2));
+    assert(vec1.size() == vec2.size());
+}
+
 void test_generate_weak_classifiers()
 {
     using wc_t = weak_classifier<integral_image<bitmap8>, 24, 24>;
     using vec_t = std::vector<wc_t>;
     vec_t vec;
     using iterator_t = decltype(std::back_inserter(vec));
-    generate_features<wc_t, haar_feature_kinds::kind_1, iterator_t>::run(std::back_inserter(vec));
+    generate_features_<wc_t, haar_feature_kinds::kind_1, iterator_t>::run(std::back_inserter(vec));
     const auto num_classifiers = 690000;
     assert(vec.size() == num_classifiers);
 }
@@ -263,5 +295,8 @@ int main()
     MCG_RUN_TEST(test_weak_classifier_with_bioid_dataset);
     MCG_RUN_TEST(test_next_offsets);
     MCG_RUN_TEST(test_generate_weak_classifiers);
+    MCG_RUN_TEST(test_generate_symmetric_weak_classifiers_1);
+    MCG_RUN_TEST(test_generate_symmetric_weak_classifiers_2);
+    MCG_RUN_TEST(test_generate_weak_classifiers_kind_5);
     return 0;
 }
